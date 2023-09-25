@@ -1,3 +1,14 @@
 
 *.pyc
 *.pyc
+documents/__pycache__/textfiledocument.cpython-310.pyc
+documents/__pycache__/jsonfiledocument.cpython-310.pyc
+documents/__pycache__/document.cpython-310.pyc
+documents/__pycache__/directorycorpus.cpython-310.pyc
+documents/__pycache__/corpus.cpython-310.pyc
+documents/__pycache__/__init__.cpython-310.pyc
+indexing/__pycache__/__init__.cpython-310.pyc
+indexing/__pycache__/index.cpython-310.pyc
+indexing/__pycache__/invertedindex.cpython-310.pyc
+indexing/__pycache__/postings.cpython-310.pyc
+indexing/__pycache__/termdocumentindex.cpython-310.pyc
