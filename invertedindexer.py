@@ -4,7 +4,7 @@
 
 from pathlib import Path
 from documents import DocumentCorpus, DirectoryCorpus
-from indexing import Index, TermDocumentIndex, InvertedIndex
+from indexing import Index, TermDocumentIndex, PositionalInvertedIndex
 from text import BasicTokenProcessor, englishtokenstream
 
 """This basic program builds a term-document matrix over the .txt files in 
@@ -30,7 +30,7 @@ def index_corpus(corpus : DocumentCorpus) -> Index:
     # TODO:
     # After the above, next:
     # Create a TermDocumentIndex object, with the vocabular you found, and the len() of the corpus.
-    InvInd = InvertedIndex(vocabulary)
+    InvInd = PositionalInvertedIndex(vocabulary)
 
     # Iterate through the documents in the corpus:
     for d in corpus:
