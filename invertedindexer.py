@@ -47,8 +47,8 @@ def index_corpus(corpus : DocumentCorpus) -> Index:
 
 
 if __name__ == "__main__":
-    corpus_path = Path("MobyDick10Chapters")
-    d = DirectoryCorpus.load_text_directory(corpus_path, ".txt")
+    corpus_path = Path("json10")
+    d = DirectoryCorpus.load_text_directory(corpus_path, ".json")
 
     # Build the index over this directory.
     index = index_corpus(d)
@@ -66,9 +66,9 @@ if __name__ == "__main__":
         query = input("Please enter the word you would like to look for: ")
         for p in index.get_postings(query):
             idList.append(d.get_document(p.doc_id).title)
-        for x in idList:
-            x = [x.replace("chapter","Chapter ")]
-            chList.append(*x)
+        # for x in idList:
+        #     x = [x.replace("chapter","Chapter ")]
+        #     chList.append(*x)
         if idList == []:
             print("Your word was not found in the given documents.")
         else:

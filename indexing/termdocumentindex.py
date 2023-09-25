@@ -45,8 +45,5 @@ class TermDocumentIndex(Index):
 		# Walk down the self._matrix row for the term and collect the document IDs (column indices) of the "true" entries.
 
 
-            
-		
-    
     def vocabulary(self) -> Iterable[str]:
         return self.vocabulary
