@@ -55,7 +55,7 @@ if __name__ == "__main__":
     
     choice = 0
     #menu options to loop
-    choice = int(input("What would you like to do?\n1) Search a word in the first 10 Chapters of Moby Dick\n2) Exit\n"))
+    choice = int(input("What would you like to do?\n1) Search a word in documents\n2) Exit\n"))
     # We aren't ready to use a full query parser;
     # for now, we'll only support single-term queries.
     query = ""#"whale" # hard-coded search for "whale"
