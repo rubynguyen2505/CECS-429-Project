@@ -12,11 +12,7 @@ class EnglishTokenStream(TokenStream):
         """Returns an iterator over the tokens in the stream."""
         # The source iterator probably returns lines of text, not words.
         # Get the next line, then yield each token from it.
-        for token in self.source:
-            for t in token.split(" "):
-                tok = t.strip()
-                if len(tok) > 0:
-                    yield tok
+        yield self.source
 
 
     # Resource management functions.

@@ -8,22 +8,28 @@ class AdvancedTokenProcessor(TokenProcessor):
     whitespace_re = re.compile(r"^\W+|\W+$")
     
     def process_token(self, token : str) -> set[str]:
-        result = {}
-        if "-" in token:
-            result = re.split("-", token).add(re.sub("-", "", token))
-        else:
-            result = [token]
+        result = []
+        result1 = []
+        if (token is not None):
+            if "-" in token:
+                result = (re.split("-", token)).append(re.sub("-", "", token))
+            else:
+                result.append(token)
 
-        for r in result:
-            # Remove non-alphanumeric characters from the beginning and end of the token, but not the middle
-            r = re.sub(self.whitespace_re, "", r)
-            # Remove all apostrophes or quotation marks (single or double quotes) from anywhere in the token.
-            r = re.sub('"', '', r)
-            r = re.sub("'", "", r)
-            # Convert the token to lowercase
-            r.lower()
-        
-        return result
+        # print(type(result))
+        if (result is not None):
+            for r in result:
+                # Remove non-alphanumeric characters from the beginning and end of the token, but not the middle
+                r = re.sub(self.whitespace_re, "", r)
+                # Remove all apostrophes or quotation marks (single or double quotes) from anywhere in the token.
+                r = re.sub('"', '', r)
+                r = re.sub("'", "", r)
+                # Convert the token to lowercase
+                r = r.lower()
+                # print(r)
+                result1.append(r)
+        if (result1 is not None):
+            return result1
 
     def normalize_type(self, type : {str}) -> {str}:
         # Stem using a "Porter2 Stemmer".

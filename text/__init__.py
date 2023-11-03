@@ -1,4 +1,5 @@
 from text.tokenprocessor import TokenProcessor
 from text.tokenstream import TokenStream
 from text.basictokenprocessor import BasicTokenProcessor
+from text.advancedtokenprocessor import AdvancedTokenProcessor
 from text.englishtokenstream import EnglishTokenStream
