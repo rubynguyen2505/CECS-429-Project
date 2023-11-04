@@ -16,18 +16,16 @@ class PositionalInvertedIndex(Index):
         pList = self.vocabulary.get(term)
         if pList == None:
             self.vocabulary[term] = []
-            self.vocabulary[term].append({})
-            self.vocabulary[term][-1][doc_id] = Posting([pos])
+            self.vocabulary[term].append(Posting(doc_id, [pos]))
         else:
             idx = 0
             for p in pList:
-                if doc_id in list(p.keys()):
-                    self.vocabulary[term][idx].get(doc_id).position.append(pos)
+                if doc_id == p.doc_id:
+                    self.vocabulary[term][idx].position.append(pos)
                     return
                 else:
                     idx += 1
-            self.vocabulary[term].append({})
-            self.vocabulary[term][-1][doc_id] = Posting([pos])
+            self.vocabulary[term].append(Posting(doc_id, [pos]))
 
         
     #if the posting does not exist, returns an empty list, then returns the value

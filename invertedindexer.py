@@ -76,7 +76,7 @@ if __name__ == "__main__":
         query = input("Please enter the word you would like to look for: ")
         for p in index.get_postings(query):
             print(p)
-            idList.append(d.get_document(list(p.keys())[0]).title)
+            idList.append(d.get_document(p.doc_id).title)
         
         print(len(idList))
         for x in idList:
