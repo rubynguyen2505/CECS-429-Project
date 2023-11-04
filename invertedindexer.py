@@ -24,37 +24,34 @@ def index_corpus(corpus : DocumentCorpus) -> Index:
         for token in tokens:
             for x in token.split(" "):
                 tok = x.strip()
-                # print(tok)
                 if (len(tok) > 0):
                     list_terms = token_processor.process_token(tok)
-                    # print(list_terms)
                     #   Add the processed token (a "term") to the vocabulary set.
                     if (list_terms is not None):
                         for t in list_terms:
                             vocabulary.add(t)
 
 
-    # TODO:
-    # After the above, next:
-    # Create a TermDocumentIndex object, with the vocabular you found, and the len() of the corpus.
     InvInd = PositionalInvertedIndex(vocabulary)
 
     # Iterate through the documents in the corpus:
     for d in corpus:
+        pos = 0
     #   Tokenize each document's content, again.
         tokens = englishtokenstream.EnglishTokenStream(d.get_content())
         for token in tokens:
             for x in token.split(" "):
                 tok = x.strip()
-                # print(tok)
                 if (len(tok) > 0):
+                    #   Process each token.
                     list_terms = token_processor.process_token(x)
                     if (list_terms is not None):
                         for t in list_terms:
-                            InvInd.add_term(t, d.id)
+                            #   Add each processed term to the index with .add_term().
+                            InvInd.add_term(t, d.id, pos)
+                    pos += 1
 
-    #   Process each token.
-    #   Add each processed term to the index with .add_term().
+
     
     return InvInd
 
@@ -78,7 +75,8 @@ if __name__ == "__main__":
         #Most of this is uncecessary, I did it for formatting purposes
         query = input("Please enter the word you would like to look for: ")
         for p in index.get_postings(query):
-            idList.append(d.get_document(p.doc_id).title)
+            print(p)
+            idList.append(d.get_document(list(p.keys())[0]).title)
         
         print(len(idList))
         for x in idList:

@@ -12,15 +12,23 @@ class PositionalInvertedIndex(Index):
         #constructs an empty vocabulary list
         self.vocabulary = {}
 
-    def add_term(self, term : str, doc_id : int):
-        #if pList does not exist, clears list, then appends the doc_id as a posting object
+    def add_term(self, term : str, doc_id : int, pos : int):
         pList = self.vocabulary.get(term)
         if pList == None:
             self.vocabulary[term] = []
-            self.vocabulary[term].append(Posting(doc_id))
-        #if the value of the last element of pList is not the same as the doc_id, then append that doc_id as a posting object
-        elif pList[-1].doc_id != doc_id:
-            self.vocabulary[term].append(Posting(doc_id))
+            self.vocabulary[term].append({})
+            self.vocabulary[term][-1][doc_id] = Posting([pos])
+        else:
+            idx = 0
+            for p in pList:
+                if doc_id in list(p.keys()):
+                    self.vocabulary[term][idx].get(doc_id).position.append(pos)
+                    return
+                else:
+                    idx += 1
+            self.vocabulary[term].append({})
+            self.vocabulary[term][-1][doc_id] = Posting([pos])
+
         
     #if the posting does not exist, returns an empty list, then returns the value
     def get_postings(self, term: str) -> Iterable[Posting]:
