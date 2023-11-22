@@ -1,7 +1,7 @@
 from .querycomponent import QueryComponent
 from indexing import Index, Posting
 
-from querying import querycomponent 
+from querying import querycomponent, NotQuery
 
 class AndQuery(QueryComponent):
     def __init__(self, components : list[QueryComponent]):
@@ -16,18 +16,29 @@ class AndQuery(QueryComponent):
         i = 1
         while (i < len(self.components)):
             result = []
-            p2 = index.get_postings(str(self.components[i]))
-            p1_p = 0
-            p2_p = 0
-            while (p1_p < len(p1) and p2_p < len(p2)):
-                if p1[p1_p].doc_id == p2[p2_p].doc_id:
-                    result.append(p1[p1_p])
-                    p1_p += 1
-                    p2_p += 1
-                elif p1[p1_p].doc_id < p2[p2_p].doc_id:
-                    p1_p += 1
-                else:
-                    p2_p += 1
+            if type(self.components[i]) is NotQuery:
+                p2 = self.components[i].get_postings(index)
+                p1_p = 0
+                p2_p = 0
+                while (p1_p < len(p1) and p2_p < len(p2)):
+                    if p1[p1_p].doc_id < p2[p2_p].doc_id:
+                        result.append(p1[p1_p])
+                        p1_p += 1
+                    else:
+                        p2_p += 1
+            else:
+                p2 = index.get_postings(str(self.components[i]))
+                p1_p = 0
+                p2_p = 0
+                while (p1_p < len(p1) and p2_p < len(p2)):
+                    if p1[p1_p].doc_id == p2[p2_p].doc_id:
+                        result.append(p1[p1_p])
+                        p1_p += 1
+                        p2_p += 1
+                    elif p1[p1_p].doc_id < p2[p2_p].doc_id:
+                        p1_p += 1
+                    else:
+                        p2_p += 1
             p1 = result
             i += 1
         return result
