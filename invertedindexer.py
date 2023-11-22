@@ -6,6 +6,7 @@ from pathlib import Path
 from documents import DocumentCorpus, DirectoryCorpus
 from indexing import Index, TermDocumentIndex, PositionalInvertedIndex
 from text import BasicTokenProcessor, AdvancedTokenProcessor, englishtokenstream
+from querying import BooleanQueryParser, AndQuery, OrQuery
 
 """This basic program builds a term-document matrix over the .txt files in 
 the same directory as this file."""
@@ -74,9 +75,15 @@ if __name__ == "__main__":
         chList = []
         #Most of this is uncecessary, I did it for formatting purposes
         query = input("Please enter the word you would like to look for: ")
-        for p in index.get_postings(query):
-            print(p)
-            idList.append(d.get_document(p.doc_id).title)
+        b = BooleanQueryParser.parse_query(query)
+        if (type(b) is AndQuery or type(b) is OrQuery):
+            for p in b.get_postings(index):
+                print(p)
+                idList.append(d.get_document(p.doc_id).title)
+        else:
+            for p in index.get_postings(str(b)):
+                print(p)
+                idList.append(d.get_document(p.doc_id).title)
         
         print(len(idList))
         for x in idList:
@@ -85,7 +92,9 @@ if __name__ == "__main__":
         if idList == []:
             print("Your word was not found in the given documents.")
         else:
-            print(f"The word {query} was found in chapters:",*chList)
+            print(f"The word {query} was found in chapters:")
+            for y in chList:
+                print(y)
         #reloop if wanting to search again
         choice = int(input("Would you like to find another word?\n1) Yes\n2) No\n"))
 
