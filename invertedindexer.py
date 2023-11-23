@@ -3,6 +3,8 @@
 #9/4/23
 
 from pathlib import Path
+import math
+import struct
 from documents import DocumentCorpus, DirectoryCorpus
 from indexing import Index, TermDocumentIndex, PositionalInvertedIndex, DiskIndexWriter, DiskPositionalIndex
 from text import BasicTokenProcessor, AdvancedTokenProcessor, englishtokenstream
@@ -35,22 +37,38 @@ def index_corpus(corpus : DocumentCorpus) -> Index:
 
     InvInd = PositionalInvertedIndex(vocabulary)
 
-    # Iterate through the documents in the corpus:
-    for d in corpus:
-        pos = 0
-    #   Tokenize each document's content, again.
-        tokens = englishtokenstream.EnglishTokenStream(d.get_content())
-        for token in tokens:
-            for x in token.split(" "):
-                tok = x.strip()
-                if (len(tok) > 0):
-                    #   Process each token.
-                    list_terms = token_processor.process_token(x)
-                    if (list_terms is not None):
-                        for t in list_terms:
-                            #   Add each processed term to the index with .add_term().
-                            InvInd.add_term(t, d.id, pos)
-                    pos += 1
+    with open('docWeights.bin', 'wb') as file:
+
+        # Iterate through the documents in the corpus:
+        for d in corpus:
+            l_d = 0
+            sum_square_tftd = 0
+            tftd = {}
+            pos = 0
+            #   Tokenize each document's content, again.
+            tokens = englishtokenstream.EnglishTokenStream(d.get_content())
+            for token in tokens:
+                for x in token.split(" "):
+                    tok = x.strip()
+                    if (len(tok) > 0):
+                        #   Process each token.
+                        list_terms = token_processor.process_token(x)
+                        if (list_terms is not None):
+                            for t in list_terms:
+                                #   Add each processed term to the index with .add_term().
+                                InvInd.add_term(t, d.id, pos)
+                                frequency = tftd.get(t)
+
+                                if frequency == None:
+                                    tftd[t] = 1
+                                else:
+                                    tftd[t] += 1
+                        pos += 1
+            for term in tftd:
+                sum_square_tftd += math.pow(tftd.get(term), 2)
+            l_d = (int)(math.sqrt(sum_square_tftd))
+            file.write(struct.pack("i", l_d))
+        file.close()
 
 
     

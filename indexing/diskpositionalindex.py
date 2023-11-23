@@ -80,6 +80,39 @@ class DiskPositionalIndex(Index):
                 file.close()
         
         return p_list
+    
+    def get_postings_skip(self, term : str):
+        p_list = []
+        database = r"pythonsqlite.db"
+        conn = self.create_connection(database)
+        with conn:
+            print(f"Get byte position for term {term}:")
+
+            row = self.select_task_by_term(conn, term)
+            byte_position = row[0][2]
+
+            with open(self.path, 'rb') as file:
+                file.seek(byte_position, 0)
+                print(file.tell())
+                length = list(struct.unpack('i', file.read(4)))
+                print(length)
+                print(file.tell())
+                i = 0
+                while i < length[0]:
+                    doc_id = list(struct.unpack('i', file.read(4)))
+                    print(file.tell())
+
+                    if i > 0:
+                        doc_id[0] = doc_id[0] + p_list[i - 1].doc_id
+                    tftd = list(struct.unpack('i', file.read(4)))
+                    print(file.tell())
+
+                    p_list.append(Posting(doc_id[0], [0]))
+                    file.seek(tftd[0], file.tell())
+                    i += 1
+                file.close()
+        
+        return p_list
 
 
         
