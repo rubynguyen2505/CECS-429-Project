@@ -3,6 +3,7 @@
 #9/4/23
 
 from pathlib import Path
+from queue import PriorityQueue
 import math
 import struct
 from documents import DocumentCorpus, DirectoryCorpus
@@ -74,6 +75,45 @@ def index_corpus(corpus : DocumentCorpus) -> Index:
     
     return InvInd
 
+def ranked_retrieve(corpus_size : int, index : DiskPositionalIndex, query : str):
+    query_terms = query.split()
+    A_d = {}
+    for term in query_terms:
+        p_list = index.get_postings(term)
+        wqt = math.log((1 + corpus_size/len(p_list)), math.e)
+        for d in p_list:
+            wdt = 1 + math.log(len(d.position), math.e)
+            accumulator = A_d.get(d.doc_id)
+            if accumulator == None:
+                A_d[d.doc_id] = 0
+            A_d[d.doc_id] += wqt * wdt
+    
+    q = PriorityQueue()
+
+    with open('docWeights.bin', 'rb') as file:
+        for d in A_d:
+            l_d = list(struct.unpack("i", file.read(4)))
+            quotient = A_d.get(d)/l_d[0]
+            q.put((quotient * (-1), d))
+        file.close()
+    
+    top_10 = []
+    i = 0
+    while i < 5:
+        next_item = q.get()
+        print(next_item)
+        top_10.append(list(next_item))
+        top_10[i][0] = top_10[i][0]/(-1)
+        i += 1
+    return top_10
+
+
+
+        
+
+
+
+
 
 if __name__ == "__main__":
     corpus_path = Path("json10")
@@ -120,6 +160,9 @@ if __name__ == "__main__":
             for y in chList:
                 print(y)
         #reloop if wanting to search again
+        top_10 = ranked_retrieve(len(d), dpi, query)
+        for item in top_10:
+            print(d.get_document(item[1]), ": score -", item[0])
         choice = int(input("Would you like to find another word?\n1) Yes\n2) No\n"))
 
     # TODO: fix this application so the user is asked for a term to search.
