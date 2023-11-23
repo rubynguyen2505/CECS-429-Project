@@ -4,7 +4,7 @@
 
 from pathlib import Path
 from documents import DocumentCorpus, DirectoryCorpus
-from indexing import Index, TermDocumentIndex, PositionalInvertedIndex
+from indexing import Index, TermDocumentIndex, PositionalInvertedIndex, DiskIndexWriter
 from text import BasicTokenProcessor, AdvancedTokenProcessor, englishtokenstream
 from querying import BooleanQueryParser, AndQuery, OrQuery
 
@@ -63,7 +63,8 @@ if __name__ == "__main__":
 
     # Build the index over this directory.
     index = index_corpus(d)
-    
+    diw = DiskIndexWriter()
+    diw.writeIndex(index, "postings.bin")
     choice = 0
     #menu options to loop
     choice = int(input("What would you like to do?\n1) Search a word in documents\n2) Exit\n"))
