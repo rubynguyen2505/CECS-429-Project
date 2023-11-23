@@ -39,6 +39,30 @@ class DiskIndexWriter:
         conn.commit()
         return cur.lastrowid
     
+    def delete_project(self, conn, id):
+        sql = 'DELETE FROM projects WHERE id=?'
+        cur = conn.cursor()
+        cur.execute(sql, (id,))
+        conn.commit()
+
+    def delete_all_projects(self, conn):
+        sql = 'DELETE FROM projects'
+        cur = conn.cursor()
+        cur.execute(sql)
+        conn.commit()
+
+    def delete_task(self, conn, id):
+        sql = 'DELETE FROM tasks WHERE id=?'
+        cur = conn.cursor()
+        cur.execute(sql, (id,))
+        conn.commit()
+
+    def delete_all_tasks(self, conn):
+        sql = 'DELETE FROM tasks'
+        cur = conn.cursor()
+        cur.execute(sql)
+        conn.commit()
+
     def writeIndex(self, index : PositionalInvertedIndex, path : str):
         database = r"pythonsqlite.db"
 
@@ -70,15 +94,17 @@ class DiskIndexWriter:
             print("Error! cannot create the database connection.")
 
         with conn:
+            self.delete_all_projects(conn)
+            self.delete_all_tasks(conn)
             project = ('Search Engine Index', '2023-11-22', '2023-11-30')
             project_id = self.create_project(conn, project)
 
             with open(path, "wb") as file:
                 for t in index.get_Vocabulary():
                     p_list = index.get_postings(t)
-                    file.write(struct.pack("i", len(p_list)))
                     task = (t, file.tell(), project_id)
                     self.create_task(conn, task)
+                    file.write(struct.pack("i", len(p_list)))
                     i = 0
                     while i < len(p_list):
                         if i == 0:

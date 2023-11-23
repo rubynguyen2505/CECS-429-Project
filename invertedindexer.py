@@ -4,7 +4,7 @@
 
 from pathlib import Path
 from documents import DocumentCorpus, DirectoryCorpus
-from indexing import Index, TermDocumentIndex, PositionalInvertedIndex, DiskIndexWriter
+from indexing import Index, TermDocumentIndex, PositionalInvertedIndex, DiskIndexWriter, DiskPositionalIndex
 from text import BasicTokenProcessor, AdvancedTokenProcessor, englishtokenstream
 from querying import BooleanQueryParser, AndQuery, OrQuery
 
@@ -63,8 +63,12 @@ if __name__ == "__main__":
 
     # Build the index over this directory.
     index = index_corpus(d)
+    
     diw = DiskIndexWriter()
     diw.writeIndex(index, "postings.bin")
+
+    dpi = DiskPositionalIndex("postings.bin")
+
     choice = 0
     #menu options to loop
     choice = int(input("What would you like to do?\n1) Search a word in documents\n2) Exit\n"))
@@ -78,11 +82,12 @@ if __name__ == "__main__":
         query = input("Please enter the word you would like to look for: ")
         b = BooleanQueryParser.parse_query(query)
         if (type(b) is AndQuery or type(b) is OrQuery):
-            for p in b.get_postings(index):
+            for p in b.get_postings(dpi):
                 print(p)
                 idList.append(d.get_document(p.doc_id).title)
         else:
-            for p in index.get_postings(str(b)):
+            dpi.get_postings(query)
+            for p in dpi.get_postings(str(b)):
                 print(p)
                 idList.append(d.get_document(p.doc_id).title)
         
