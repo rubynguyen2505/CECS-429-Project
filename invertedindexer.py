@@ -77,14 +77,14 @@ def index_corpus(corpus : DocumentCorpus) -> Index:
             for term in tftd:
                 sum_square_tftd += math.pow(tftd.get(term), 2)
             l_d = (int)(math.sqrt(sum_square_tftd))
-            file.write(struct.pack("i", l_d))
+            file.write(struct.pack("d", l_d))
         file.close()
 
 
     
     return InvInd
 
-def okapi_25(corpus_size : int, index : DiskPositionalIndex, query : str):
+def okapi_25(corpus : DocumentCorpus, index : DiskPositionalIndex, query : str):
     query_terms = query.split()
     A_d = {}
     doc_length_sum = 0
@@ -93,9 +93,11 @@ def okapi_25(corpus_size : int, index : DiskPositionalIndex, query : str):
     doc_length_A = doc_length_sum / len(doc_length_d)
     for term in query_terms:
         p_list = index.get_postings(term)
-        wqt = max(0.1, math.log((corpus_size - len(p_list) + 0.5) / (len(p_list) + 0.5), math.e))
+        wqt = max(0.1, math.log((len(corpus) - len(p_list) + 0.5) / (len(p_list) + 0.5), math.e))
+        print(f'{len(p_list)} postings for term "{term}"; with wQt = {wqt}')
         for d in p_list:
             wdt = (2.2 * len(d.position)) / (1.2 * (0.25 + 0.75 * (doc_length_d.get(d.doc_id) / doc_length_A)) + len(d.position))
+            print(f'wDt({corpus.get_document(d.doc_id).title} (ID {d.doc_id})) = {wdt}')
             accumulator = A_d.get(d.doc_id)
             if accumulator == None:
                 A_d[d.doc_id] = 0
@@ -112,20 +114,21 @@ def okapi_25(corpus_size : int, index : DiskPositionalIndex, query : str):
     i = 0
     while i < 5:
         next_item = q.get()
-        print(next_item)
         top_10.append(list(next_item))
         top_10[i][0] = top_10[i][0]/(-1)
         i += 1
     return top_10
 
-def ranked_retrieve(corpus_size : int, index : DiskPositionalIndex, query : str):
+def ranked_retrieve(corpus : DocumentCorpus, index : DiskPositionalIndex, query : str):
     query_terms = query.split()
     A_d = {}
     for term in query_terms:
         p_list = index.get_postings(term)
-        wqt = math.log((1 + corpus_size/len(p_list)), math.e)
+        wqt = math.log((1 + len(corpus)/len(p_list)), math.e)
+        print(f'{len(p_list)} postings for term "{term}"; with wQt = {wqt}')
         for d in p_list:
             wdt = 1 + math.log(len(d.position), math.e)
+            print(f'wDt({corpus.get_document(d.doc_id).title} (ID {d.doc_id})) = {wdt}')
             accumulator = A_d.get(d.doc_id)
             if accumulator == None:
                 A_d[d.doc_id] = 0
@@ -135,7 +138,8 @@ def ranked_retrieve(corpus_size : int, index : DiskPositionalIndex, query : str)
 
     with open('docWeights.bin', 'rb') as file:
         for d in A_d:
-            l_d = list(struct.unpack("i", file.read(4)))
+            l_d = list(struct.unpack("d", file.read(8)))
+            print(f'Ld({corpus.get_document(d).title} (ID {d})) = {l_d[0]}')
             quotient = A_d.get(d)/l_d[0]
             q.put((quotient * (-1), d))
         file.close()
@@ -144,7 +148,6 @@ def ranked_retrieve(corpus_size : int, index : DiskPositionalIndex, query : str)
     i = 0
     while i < 5:
         next_item = q.get()
-        print(next_item)
         top_10.append(list(next_item))
         top_10[i][0] = top_10[i][0]/(-1)
         i += 1
@@ -205,13 +208,13 @@ if __name__ == "__main__":
         choice_ranking = int(input("How would you like to rank your query?\n1) By default\n2) Okapi 25\n3) Return\n"))
         while choice_ranking != 3:
             if choice_ranking == 1:
-                top_10 = ranked_retrieve(len(d), dpi, query)
+                top_10 = ranked_retrieve(d, dpi, query)
                 for item in top_10:
-                    print(d.get_document(item[1]), ": score -", item[0])
+                    print(d.get_document(item[1]), f"(ID {item[1]}) -- {item[0]}")
             else:
                 top_10 = okapi_25(len(d), dpi, query)
                 for item in top_10:
-                    print(d.get_document(item[1]), ": score -", item[0])
+                    print(d.get_document(item[1]), f"(ID {item[1]}) -- {item[0]}")
             choice_ranking = int(input("Would you like to rank again?\n1) By default\n2) Okapi 25\n3) No\n"))
 
         choice = int(input("Would you like to find another word?\n1) Yes\n2) No\n"))
