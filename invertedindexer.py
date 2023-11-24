@@ -6,6 +6,7 @@ from pathlib import Path
 from queue import PriorityQueue
 import math
 import struct
+import time
 from documents import DocumentCorpus, DirectoryCorpus
 from indexing import Index, TermDocumentIndex, PositionalInvertedIndex, DiskIndexWriter, DiskPositionalIndex
 from text import BasicTokenProcessor, AdvancedTokenProcessor, englishtokenstream
@@ -21,6 +22,7 @@ def index_corpus(corpus : DocumentCorpus) -> Index:
     token_processor = AdvancedTokenProcessor()
     vocabulary = set()
     
+    """
     for d in corpus:
         print(f"Found document {d.title}")
         # TODO:
@@ -36,14 +38,17 @@ def index_corpus(corpus : DocumentCorpus) -> Index:
                     if (list_terms is not None):
                         for t in list_terms:
                             vocabulary.add(t)
+    """
 
-
-    InvInd = PositionalInvertedIndex(vocabulary)
-
+    InvInd = PositionalInvertedIndex()
+    d_num = 0
     with open('docWeights.bin', 'wb') as file:
 
         # Iterate through the documents in the corpus:
         for d in corpus:
+            d_num += 1
+            print(f"Found document {d.title}")
+            print(d_num)
             l_d = 0
             sum_square_tftd = 0
             tftd = {}
@@ -76,7 +81,7 @@ def index_corpus(corpus : DocumentCorpus) -> Index:
                         pos += 1
             for term in tftd:
                 sum_square_tftd += math.pow(tftd.get(term), 2)
-            l_d = (int)(math.sqrt(sum_square_tftd))
+            l_d = (math.sqrt(sum_square_tftd))
             file.write(struct.pack("d", l_d))
         file.close()
 
@@ -162,13 +167,25 @@ def ranked_retrieve(corpus : DocumentCorpus, index : DiskPositionalIndex, query 
 if __name__ == "__main__":
     corpus_path = Path("json10")
     d = DirectoryCorpus.load_text_directory(corpus_path, ".json")
-
-    # Build the index over this directory.
-    index = index_corpus(d)
     
+    # Build the index over this directory.
+    print("Building index...")
+    start = time.time()
+    index = index_corpus(d)
+    end = time.time()
+    hours, rem = divmod(end-start, 3600)
+    minutes, seconds = divmod(rem, 60)
+    print("{:0>2}:{:0>2}:{:05.2f}".format(int(hours),int(minutes),seconds))
+    
+    print("Writing to disk...")
+    start = time.time()
     diw = DiskIndexWriter()
     diw.writeIndex(index, "postings.bin")
-
+    end = time.time()
+    hours, rem = divmod(end-start, 3600)
+    minutes, seconds = divmod(rem, 60)
+    print("{:0>2}:{:0>2}:{:05.2f}".format(int(hours),int(minutes),seconds))
+    
     dpi = DiskPositionalIndex("postings.bin")
 
     choice = 0
@@ -188,10 +205,12 @@ if __name__ == "__main__":
                 print(p)
                 idList.append(d.get_document(p.doc_id).title)
         else:
-            dpi.get_postings(query)
+            # dpi.get_postings(query)
             for p in dpi.get_postings(str(b)):
-                print(p)
-                idList.append(d.get_document(p.doc_id).title)
+                print(p.doc_id)
+                for doc in d:
+                    if doc.id == p.doc_id:
+                        idList.append(d.get_document(p.doc_id).title)
         
         print(len(idList))
         for x in idList:

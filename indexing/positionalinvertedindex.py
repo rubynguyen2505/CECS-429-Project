@@ -8,7 +8,7 @@ from .index import Index
 
 class PositionalInvertedIndex(Index):
 
-    def __init__(self, vocab : Iterable[str]):
+    def __init__(self):
         #constructs an empty vocabulary list
         self.vocabulary = {}
 

@@ -51,25 +51,18 @@ class DiskPositionalIndex(Index):
 
             with open(self.path, 'rb') as file:
                 file.seek(byte_position, 0)
-                print(file.tell())
                 length = list(struct.unpack('i', file.read(4)))
-                print(length)
-                print(file.tell())
                 i = 0
                 while i < length[0]:
                     doc_id = list(struct.unpack('i', file.read(4)))
-                    print(file.tell())
 
                     if i > 0:
                         doc_id[0] = doc_id[0] + p_list[i - 1].doc_id
                     tftd = list(struct.unpack('i', file.read(4)))
-                    print(file.tell())
 
                     j = 0
                     while j < tftd[0]:
                         position = list(struct.unpack('i', file.read(4)))
-                        print(position)
-                        print(file.tell())
                         if j > 0:
                             position[0] = position[0] + p_list[i].position[j - 1]
                             p_list[i].position.append(position[0])
