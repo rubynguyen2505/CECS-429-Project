@@ -15,8 +15,7 @@ from querying import BooleanQueryParser, AndQuery, OrQuery
 """This basic program builds a term-document matrix over the .txt files in 
 the same directory as this file."""
 
-doc_length_d = {}
-doc_length_A = 0
+
 def index_corpus(corpus : DocumentCorpus) -> Index:
     
     token_processor = AdvancedTokenProcessor()
@@ -59,25 +58,14 @@ def index_corpus(corpus : DocumentCorpus) -> Index:
                 for x in token.split(" "):
                     tok = x.strip()
                     if (len(tok) > 0):
-                        #   Process each token.
-                        f = doc_length_d.get(d.id)
-
-                        if f == None:
-                            doc_length_d[d.id] = 1
-                        else:
-                            doc_length_d[d.id] += 1
-                        
-                        list_terms = token_processor.process_token(tok)
-                        if (list_terms is not None):
-                            for t in list_terms:
-                                #   Add each processed term to the index with .add_term().
-                                InvInd.add_term(t, d.id, pos)
-                                frequency = tftd.get(t)
-
-                                if frequency == None:
-                                    tftd[t] = 1
-                                else:
-                                    tftd[t] += 1
+                        #   Process each token.  
+                        for t in token_processor.process_token(tok):
+                            #   Add each processed term to the index with .add_term().
+                            InvInd.add_term(t, d.id, pos)
+                            if tftd.get(t) == None:
+                                tftd[t] = 1
+                            else:
+                                tftd[t] += 1
                         pos += 1
             for term in tftd:
                 sum_square_tftd += math.pow(tftd.get(term), 2)
@@ -90,6 +78,17 @@ def index_corpus(corpus : DocumentCorpus) -> Index:
     return InvInd
 
 def okapi_25(corpus : DocumentCorpus, index : DiskPositionalIndex, query : str):
+    doc_length_d = {}
+    doc_length_A = 0
+    for d in corpus:
+        token_count = 0
+        tokens = englishtokenstream.EnglishTokenStream(d.get_content())
+        for token in tokens:
+            for x in token.split(" "):
+                tok = x.strip()
+                if (len(tok) > 0):
+                    token_count += 1
+        doc_length_d[d.id] = token_count
     query_terms = query.split()
     A_d = {}
     doc_length_sum = 0
@@ -168,6 +167,7 @@ if __name__ == "__main__":
     corpus_path = Path("json10")
     d = DirectoryCorpus.load_text_directory(corpus_path, ".json")
     
+    """
     # Build the index over this directory.
     print("Building index...")
     start = time.time()
@@ -185,7 +185,7 @@ if __name__ == "__main__":
     hours, rem = divmod(end-start, 3600)
     minutes, seconds = divmod(rem, 60)
     print("{:0>2}:{:0>2}:{:05.2f}".format(int(hours),int(minutes),seconds))
-    
+    """
     dpi = DiskPositionalIndex("postings.bin")
 
     choice = 0
@@ -231,7 +231,7 @@ if __name__ == "__main__":
                 for item in top_10:
                     print(d.get_document(item[1]), f"(ID {item[1]}) -- {item[0]}")
             else:
-                top_10 = okapi_25(len(d), dpi, query)
+                top_10 = okapi_25(d, dpi, query)
                 for item in top_10:
                     print(d.get_document(item[1]), f"(ID {item[1]}) -- {item[0]}")
             choice_ranking = int(input("Would you like to rank again?\n1) By default\n2) Okapi 25\n3) No\n"))

@@ -67,7 +67,7 @@ class DiskPositionalIndex(Index):
                             position[0] = position[0] + p_list[i].position[j - 1]
                             p_list[i].position.append(position[0])
                         else:
-                            p_list.append(Posting(doc_id[0], [position[0]]))
+                            p_list.append(Posting(doc_id[0], position[0]))
                         j += 1
                     i += 1
                 file.close()
@@ -100,7 +100,7 @@ class DiskPositionalIndex(Index):
                     tftd = list(struct.unpack('i', file.read(4)))
                     print(file.tell())
 
-                    p_list.append(Posting(doc_id[0], [0]))
+                    p_list.append(Posting(doc_id[0], 0))
                     file.seek(tftd[0], file.tell())
                     i += 1
                 file.close()
