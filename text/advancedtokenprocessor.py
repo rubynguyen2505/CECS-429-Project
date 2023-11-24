@@ -33,7 +33,9 @@ class AdvancedTokenProcessor(TokenProcessor):
 
     def normalize_type(self, type : {str}) -> {str}:
         # Stem using a "Porter2 Stemmer".
+        list_terms = []
         stemmer = Porter2Stemmer()
         for t in type:
             t = stemmer.stem(t)
-        return type
+            list_terms.append(t)
+        return list_terms

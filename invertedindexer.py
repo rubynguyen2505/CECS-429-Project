@@ -59,7 +59,9 @@ def index_corpus(corpus : DocumentCorpus) -> Index:
                     tok = x.strip()
                     if (len(tok) > 0):
                         #   Process each token.  
-                        for t in token_processor.process_token(tok):
+                        list_types = token_processor.process_token(tok)
+                        list_terms = token_processor.normalize_type(list_types)
+                        for t in list_terms:
                             #   Add each processed term to the index with .add_term().
                             InvInd.add_term(t, d.id, pos)
                             if tftd.get(t) == None:
@@ -116,7 +118,7 @@ def okapi_25(corpus : DocumentCorpus, index : DiskPositionalIndex, query : str):
     
     top_10 = []
     i = 0
-    while i < 5:
+    while i < 10:
         next_item = q.get()
         top_10.append(list(next_item))
         top_10[i][0] = top_10[i][0]/(-1)
@@ -142,6 +144,7 @@ def ranked_retrieve(corpus : DocumentCorpus, index : DiskPositionalIndex, query 
 
     with open('docWeights.bin', 'rb') as file:
         for d in A_d:
+            file.seek(d * 8, 0)
             l_d = list(struct.unpack("d", file.read(8)))
             print(f'Ld({corpus.get_document(d).title} (ID {d})) = {l_d[0]}')
             quotient = A_d.get(d)/l_d[0]
@@ -150,7 +153,7 @@ def ranked_retrieve(corpus : DocumentCorpus, index : DiskPositionalIndex, query 
     
     top_10 = []
     i = 0
-    while i < 5:
+    while i < 10:
         next_item = q.get()
         top_10.append(list(next_item))
         top_10[i][0] = top_10[i][0]/(-1)
