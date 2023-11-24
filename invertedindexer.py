@@ -14,6 +14,8 @@ from querying import BooleanQueryParser, AndQuery, OrQuery
 """This basic program builds a term-document matrix over the .txt files in 
 the same directory as this file."""
 
+doc_length_d = {}
+doc_length_A = 0
 def index_corpus(corpus : DocumentCorpus) -> Index:
     
     token_processor = AdvancedTokenProcessor()
@@ -53,7 +55,14 @@ def index_corpus(corpus : DocumentCorpus) -> Index:
                     tok = x.strip()
                     if (len(tok) > 0):
                         #   Process each token.
-                        list_terms = token_processor.process_token(x)
+                        f = doc_length_d.get(d.id)
+
+                        if f == None:
+                            doc_length_d[d.id] = 1
+                        else:
+                            doc_length_d[d.id] += 1
+                        
+                        list_terms = token_processor.process_token(tok)
                         if (list_terms is not None):
                             for t in list_terms:
                                 #   Add each processed term to the index with .add_term().
@@ -74,6 +83,40 @@ def index_corpus(corpus : DocumentCorpus) -> Index:
 
     
     return InvInd
+
+def okapi_25(corpus_size : int, index : DiskPositionalIndex, query : str):
+    query_terms = query.split()
+    A_d = {}
+    doc_length_sum = 0
+    for d in doc_length_d:
+        doc_length_sum += doc_length_d.get(d)
+    doc_length_A = doc_length_sum / len(doc_length_d)
+    for term in query_terms:
+        p_list = index.get_postings(term)
+        wqt = max(0.1, math.log((corpus_size - len(p_list) + 0.5) / (len(p_list) + 0.5), math.e))
+        for d in p_list:
+            wdt = (2.2 * len(d.position)) / (1.2 * (0.25 + 0.75 * (doc_length_d.get(d.doc_id) / doc_length_A)) + len(d.position))
+            accumulator = A_d.get(d.doc_id)
+            if accumulator == None:
+                A_d[d.doc_id] = 0
+            A_d[d.doc_id] += wqt * wdt
+    
+    q = PriorityQueue()
+
+    
+    for d in A_d:
+        quotient = A_d.get(d)/1
+        q.put((quotient * (-1), d))
+    
+    top_10 = []
+    i = 0
+    while i < 5:
+        next_item = q.get()
+        print(next_item)
+        top_10.append(list(next_item))
+        top_10[i][0] = top_10[i][0]/(-1)
+        i += 1
+    return top_10
 
 def ranked_retrieve(corpus_size : int, index : DiskPositionalIndex, query : str):
     query_terms = query.split()
@@ -106,8 +149,6 @@ def ranked_retrieve(corpus_size : int, index : DiskPositionalIndex, query : str)
         top_10[i][0] = top_10[i][0]/(-1)
         i += 1
     return top_10
-
-
 
         
 
@@ -160,9 +201,19 @@ if __name__ == "__main__":
             for y in chList:
                 print(y)
         #reloop if wanting to search again
-        top_10 = ranked_retrieve(len(d), dpi, query)
-        for item in top_10:
-            print(d.get_document(item[1]), ": score -", item[0])
+        choice_ranking = 0
+        choice_ranking = int(input("How would you like to rank your query?\n1) By default\n2) Okapi 25\n3) Return\n"))
+        while choice_ranking != 3:
+            if choice_ranking == 1:
+                top_10 = ranked_retrieve(len(d), dpi, query)
+                for item in top_10:
+                    print(d.get_document(item[1]), ": score -", item[0])
+            else:
+                top_10 = okapi_25(len(d), dpi, query)
+                for item in top_10:
+                    print(d.get_document(item[1]), ": score -", item[0])
+            choice_ranking = int(input("Would you like to rank again?\n1) By default\n2) Okapi 25\n3) No\n"))
+
         choice = int(input("Would you like to find another word?\n1) Yes\n2) No\n"))
 
     # TODO: fix this application so the user is asked for a term to search.
