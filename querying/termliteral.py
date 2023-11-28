@@ -1,4 +1,5 @@
 from indexing.postings import Posting
+from text.advancedtokenprocessor import AdvancedTokenProcessor
 from .querycomponent import QueryComponent
 
 class TermLiteral(QueryComponent):
@@ -10,7 +11,9 @@ class TermLiteral(QueryComponent):
         self.term = term
 
     def get_postings(self, index) -> list[Posting]:
-        return index.get_postings(self.term)
+        atp = AdvancedTokenProcessor()
+        self.term = atp.normalize_type({self.term})
+        return index.get_postings(self.term[0])
 
     def __str__(self) -> str:
         return self.term

@@ -170,7 +170,7 @@ if __name__ == "__main__":
     corpus_path = Path("json10")
     d = DirectoryCorpus.load_text_directory(corpus_path, ".json")
     
-    """
+    
     # Build the index over this directory.
     print("Building index...")
     start = time.time()
@@ -188,7 +188,8 @@ if __name__ == "__main__":
     hours, rem = divmod(end-start, 3600)
     minutes, seconds = divmod(rem, 60)
     print("{:0>2}:{:0>2}:{:05.2f}".format(int(hours),int(minutes),seconds))
-    """
+    
+
     dpi = DiskPositionalIndex("postings.bin")
 
     choice = 0
@@ -203,17 +204,11 @@ if __name__ == "__main__":
         #Most of this is uncecessary, I did it for formatting purposes
         query = input("Please enter the word you would like to look for: ")
         b = BooleanQueryParser.parse_query(query)
-        if (type(b) is AndQuery or type(b) is OrQuery):
-            for p in b.get_postings(dpi):
-                print(p)
-                idList.append(d.get_document(p.doc_id).title)
-        else:
-            # dpi.get_postings(query)
-            for p in dpi.get_postings(str(b)):
-                print(p.doc_id)
-                for doc in d:
-                    if doc.id == p.doc_id:
-                        idList.append(d.get_document(p.doc_id).title)
+        for p in b.get_postings(dpi):
+            print(p)
+            for doc in d:
+                if doc.id == p.doc_id:
+                    idList.append(d.get_document(p.doc_id).title)
         
         print(len(idList))
         for x in idList:

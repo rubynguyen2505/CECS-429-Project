@@ -1,6 +1,6 @@
 from .querycomponent import QueryComponent
 from indexing import Index, Posting
-
+from text.advancedtokenprocessor import AdvancedTokenProcessor
 from querying import querycomponent, AndQuery
 
 class OrQuery(QueryComponent):
@@ -8,17 +8,18 @@ class OrQuery(QueryComponent):
         self.components = components
 
     def get_postings(self, index : Index) -> list[Posting]:
+        atp = AdvancedTokenProcessor()
         result = []
         # TODO: program the merge for an OrQuery, by gathering the postings of the composed QueryComponents and
 		# merging the resulting postings.
         if type(self.components[0]) == AndQuery:
             p1 = self.components[0].get_postings(index)
         else:
-            p1 = index.get_postings(str(self.components[0]))
+            p1 = index.get_postings(atp.normalize_type({str(self.components[0])})[0])
         i = 1
         while (i < len(self.components)):
             result = []
-            p2 = index.get_postings(str(self.components[i]))
+            p2 = index.get_postings(atp.normalize_type({str(self.components[i])})[0])
             p1_p = 0
             p2_p = 0
             while (p1_p < len(p1) and p2_p < len(p2)):
