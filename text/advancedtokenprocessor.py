@@ -12,7 +12,8 @@ class AdvancedTokenProcessor(TokenProcessor):
         result1 = []
         if (token is not None):
             if "-" in token:
-                result = (re.split("-", token)).append(re.sub("-", "", token))
+                result = re.split("-", token)
+                result.append(re.sub("-", "", token))
             else:
                 result.append(token)
 
