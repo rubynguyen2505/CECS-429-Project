@@ -5,6 +5,7 @@
 from pathlib import Path
 from queue import PriorityQueue
 import math
+import re
 import struct
 import time
 from documents import DocumentCorpus, DirectoryCorpus
@@ -45,9 +46,9 @@ def index_corpus(corpus : DocumentCorpus) -> Index:
 
         # Iterate through the documents in the corpus:
         for d in corpus:
-            d_num += 1
-            print(f"Found document {d.title}")
-            print(d_num)
+            # d_num += 1
+            # print(f"Found document {d.title}")
+            # print(d_num)
             l_d = 0
             sum_square_tftd = 0
             tftd = {}
@@ -64,13 +65,14 @@ def index_corpus(corpus : DocumentCorpus) -> Index:
                         for t in list_terms:
                             #   Add each processed term to the index with .add_term().
                             InvInd.add_term(t, d.id, pos)
+                            # print(t)
                             if tftd.get(t) == None:
                                 tftd[t] = 1
                             else:
                                 tftd[t] += 1
                         pos += 1
             for term in tftd:
-                sum_square_tftd += math.pow(tftd.get(term), 2)
+                sum_square_tftd += math.pow(1 + math.log(tftd.get(term), math.e), 2)
             l_d = (math.sqrt(sum_square_tftd))
             file.write(struct.pack("d", l_d))
         file.close()
@@ -91,14 +93,17 @@ def okapi_25(corpus : DocumentCorpus, index : DiskPositionalIndex, query : str):
                 if (len(tok) > 0):
                     token_count += 1
         doc_length_d[d.id] = token_count
+    if "+" in query:
+        query = query.replace("+", "")
     query_terms = query.split()
     A_d = {}
     doc_length_sum = 0
     for d in doc_length_d:
         doc_length_sum += doc_length_d.get(d)
     doc_length_A = doc_length_sum / len(doc_length_d)
+    atp = AdvancedTokenProcessor()
     for term in query_terms:
-        p_list = index.get_postings(term)
+        p_list = index.get_postings(atp.normalize_type({term})[0])
         wqt = max(0.1, math.log((len(corpus) - len(p_list) + 0.5) / (len(p_list) + 0.5), math.e))
         print(f'{len(p_list)} postings for term "{term}"; with wQt = {wqt}')
         for d in p_list:
@@ -113,6 +118,7 @@ def okapi_25(corpus : DocumentCorpus, index : DiskPositionalIndex, query : str):
 
     
     for d in A_d:
+        print(f'Ld({corpus.get_document(d).title} (ID {d})) = 1')
         quotient = A_d.get(d)/1
         q.put((quotient * (-1), d))
     
@@ -126,10 +132,13 @@ def okapi_25(corpus : DocumentCorpus, index : DiskPositionalIndex, query : str):
     return top_10
 
 def ranked_retrieve(corpus : DocumentCorpus, index : DiskPositionalIndex, query : str):
+    if "+" in query:
+        query = query.replace("+", "")
     query_terms = query.split()
     A_d = {}
+    atp = AdvancedTokenProcessor()
     for term in query_terms:
-        p_list = index.get_postings(term)
+        p_list = index.get_postings(atp.normalize_type({term})[0])
         wqt = math.log((1 + len(corpus)/len(p_list)), math.e)
         print(f'{len(p_list)} postings for term "{term}"; with wQt = {wqt}')
         for d in p_list:
@@ -205,7 +214,7 @@ if __name__ == "__main__":
         query = input("Please enter the word you would like to look for: ")
         b = BooleanQueryParser.parse_query(query)
         for p in b.get_postings(dpi):
-            print(p)
+            # print(p)
             for doc in d:
                 if doc.id == p.doc_id:
                     idList.append(d.get_document(p.doc_id).title)
