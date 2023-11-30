@@ -24,7 +24,7 @@ class DiskPositionalIndex(Index):
 
     def select_all_tasks(self, conn):
         cur = conn.cursor()
-        cur.execute("SELECT * FROM tasks")
+        cur.execute("SELECT * FROM TBP")
 
         rows = cur.fetchall()
 
@@ -33,7 +33,7 @@ class DiskPositionalIndex(Index):
 
     def select_task_by_term(self, conn, term):
         cur = conn.cursor()
-        cur.execute("SELECT * FROM tasks WHERE term=?", (term,))
+        cur.execute("SELECT * FROM TBP WHERE term=?", (term,))
 
         rows = cur.fetchall()
 
