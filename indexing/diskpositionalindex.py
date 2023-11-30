@@ -47,7 +47,7 @@ class DiskPositionalIndex(Index):
             print(f"Get byte position for term {term}:")
 
             row = self.select_task_by_term(conn, term)
-            byte_position = row[0][2]
+            byte_position = row[0][1]
 
             with open(self.path, 'rb') as file:
                 file.seek(byte_position, 0)
